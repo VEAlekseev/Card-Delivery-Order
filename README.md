@@ -1,0 +1,2 @@
+# Card Delivery Order
+[![Build status](https://ci.appveyor.com/api/projects/status/fswngb1ha7wnn8hq/branch/master?svg=true)](https://ci.appveyor.com/project/VEAlekseev/card-delivery-order/branch/master)
