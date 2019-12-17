@@ -4,12 +4,15 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.openqa.selenium.Keys;
 
+
+
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
+
+import static com.codeborne.selenide.Condition.exactText;
 import static com.codeborne.selenide.Selectors.withText;
-import static com.codeborne.selenide.Selenide.$;
-import static com.codeborne.selenide.Selenide.open;
+import static com.codeborne.selenide.Selenide.*;
 
 
 class CardDeliveryOrderTest {
@@ -100,7 +103,7 @@ class CardDeliveryOrderTest {
         form.$("[placeholder='Дата встречи']")
                 .setValue(localDate.plusDays(3).format(DateTimeFormatter.ofPattern("dd.MM.YYYY")));
         form.$("[name='name']").setValue("Иванов Иван");
-        form.$("[name='phone']").setValue("+790123456");
+        form.$("[name='phone']").setValue("+79012345678");
         form.$("[data-test-id=agreement]").click();
         form.$("[class='button__content']").click();
         form.$(withText("Поле обязательно для заполнения")).shouldBe(Condition.visible);
@@ -115,9 +118,42 @@ class CardDeliveryOrderTest {
         form.$("[placeholder='Дата встречи']")
                 .setValue(localDate.plusDays(3).format(DateTimeFormatter.ofPattern("dd.MM.YYYY")));
         form.$("[name='name']").setValue("Иванов Иван");
-        form.$("[name='phone']").setValue("+790123456");
+        form.$("[name='phone']").setValue("+79012345678");
         form.$("[class='button__content']").click();
         form.$(withText("Я соглашаюсь с условиями обработки и использования моих персональных данных"))
                 .shouldBe(Condition.visible);
+    }
+
+    @Test
+    @DisplayName(value = "Check city selection by two letters")
+    void checkCitySelectionByTwoLetters() {
+        open("http://localhost:9999");
+        $("[placeholder='Город']").setValue("Пс");
+        $$("[class=menu-item__control]").find(exactText("Псков")).click();
+        $("[placeholder='Дата встречи']").sendKeys(Keys.chord(Keys.CONTROL, "a", Keys.DELETE));
+        $("[placeholder='Дата встречи']")
+                .setValue(localDate.plusDays(3).format(DateTimeFormatter.ofPattern("dd.MM.YYYY")));
+        $("[name='name']").setValue("Иванов Иван");
+        $("[name='phone']").setValue("+79012345678");
+        $("[data-test-id=agreement]").click();
+        $("[class='button__content']").click();
+        $(withText("Встреча успешно забронирована на")).waitUntil(Condition.visible, 25000);
+    }
+
+    @Test
+    @DisplayName(value = "On 7 days order")
+    void On7DaysOrder() {
+        open("http://localhost:9999");
+        $("[placeholder='Город']").setValue("Псков");
+        $("[data-test-id=date] input").sendKeys(Keys.chord(Keys.CONTROL, "a", Keys.DELETE));
+        $("[data-test-id=date] input").click();
+        $$("[class=calendar-input__calendar-wrapper]").find(Condition.attribute(String.valueOf(localDate.plusDays(7)))).click();
+        //выбор даты в календаре не работает
+        $("[name='name']").setValue("Иванов Иван");
+        $("[name='phone']").setValue("+79012345678");
+        $("[data-test-id=agreement]").click();
+        $("[class='button__content']").click();
+        $(withText("Встреча успешно забронирована на")).waitUntil(Condition.visible, 25000);
+
     }
 }
