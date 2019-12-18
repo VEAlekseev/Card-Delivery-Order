@@ -1,127 +1,133 @@
 import com.codeborne.selenide.Condition;
-import com.codeborne.selenide.SelenideElement;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.openqa.selenium.Keys;
 
 
-
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.Date;
 
 
 import static com.codeborne.selenide.Condition.exactText;
+import static com.codeborne.selenide.Condition.text;
 import static com.codeborne.selenide.Selectors.withText;
 import static com.codeborne.selenide.Selenide.*;
 
 
 class CardDeliveryOrderTest {
-    LocalDate localDate = LocalDate.now();
-    SelenideElement form = $("form");
+    static LocalDate localDate = LocalDate.now();
+
+
+    static Date datePicker() {
+        $("[placeholder='Дата встречи']").sendKeys(Keys.chord(Keys.CONTROL, "a", Keys.DELETE));
+        $("[placeholder='Дата встречи']")
+                .setValue(localDate.plusDays(5).format(DateTimeFormatter.ofPattern("dd.MM.YYYY")));
+        return null;
+    }
+
+    static String defaultName() {
+        $("[name='name']").setValue("Иванов Иван");
+        return null;
+    }
+
+    static String defaultPhone() {
+        $("[name='phone']").setValue("+79012345678");
+        return null;
+    }
 
     @Test
     @DisplayName(value = "Check verification form with correct input")
     void checkVerificationFormWithCorrectInput() {
         open("http://localhost:9999");
-        form.$("[data-test-id=city] input").setValue("Санкт-Петербург");
-        form.$("[placeholder='Дата встречи']").sendKeys(Keys.chord(Keys.CONTROL, "a", Keys.DELETE));
-        form.$("[placeholder='Дата встречи']")
-                .setValue(localDate.plusDays(3).format(DateTimeFormatter.ofPattern("dd.MM.YYYY")));
-        form.$("[name='name']").setValue("Иванов Иван");
-        form.$("[name='phone']").setValue("+79012345678");
-        form.$("[data-test-id=agreement]").click();
-        form.$("[class='button__content']").click();
-        $(withText("Встреча успешно забронирована на")).waitUntil(Condition.visible, 25000);
+        $("[data-test-id=city] input").setValue("Санкт-Петербург");
+        datePicker();
+        defaultName();
+        defaultPhone();
+        $("[data-test-id=agreement]").click();
+        $("[class='button__content']").click();
+        $("[class='notification__content']").waitUntil(Condition.visible, 25000)
+                .shouldHave(text("Встреча успешно забронирована на "));
     }
 
     @Test
     @DisplayName(value = "Wrong date selection test")
-    void WrongDateSelectionTest() {
+    void wrongDateSelectionTest() {
         open("http://localhost:9999");
-        form.$("[placeholder='Город']").setValue("Санкт-Петербург");
-        form.$("[placeholder='Дата встречи']").sendKeys(Keys.chord(Keys.CONTROL, "a", Keys.DELETE));
-        form.$("[placeholder='Дата встречи']").setValue(localDate.format(DateTimeFormatter.ofPattern("dd.MM.YYYY")));
-        form.$("[name='name']").setValue("Иванов Иван");
-        form.$("[name='phone']").setValue("+79012345678");
-        form.$("[data-test-id=agreement]").click();
-        form.$("[class='button__content']").click();
-        form.$(withText("Заказ на выбранную дату невозможен")).shouldBe(Condition.visible);
+        $("[placeholder='Город']").setValue("Санкт-Петербург");
+        $("[placeholder='Дата встречи']").sendKeys(Keys.chord(Keys.CONTROL, "a", Keys.DELETE));
+        $("[placeholder='Дата встречи']").setValue(localDate.format(DateTimeFormatter.ofPattern("dd.MM.YYYY")));
+        defaultName();
+        defaultPhone();
+        $("[data-test-id=agreement]").click();
+        $("[class='button__content']").click();
+        $(".input_invalid .input__sub").shouldHave(text("Заказ на выбранную дату невозможен"));
     }
 
     @Test
     @DisplayName(value = "Wrong city selection test")
-    void WrongCitySelectionTest() {
+    void wrongCitySelectionTest() {
         open("http://localhost:9999");
-        form.$("[placeholder='Город']").setValue("Норильск");
-        form.$("[placeholder='Дата встречи']").sendKeys(Keys.chord(Keys.CONTROL, "a", Keys.DELETE));
-        form.$("[placeholder='Дата встречи']")
-                .setValue(localDate.plusDays(3).format(DateTimeFormatter.ofPattern("dd.MM.YYYY")));
-        form.$("[name='name']").setValue("Иванов Иван");
-        form.$("[name='phone']").setValue("+79012345678");
-        form.$("[data-test-id=agreement]").click();
-        form.$("[class='button__content']").click();
-        form.$(withText("Доставка в выбранный город недоступна")).shouldBe(Condition.visible);
+        $("[placeholder='Город']").setValue("Норильск");
+        datePicker();
+        defaultName();
+        defaultPhone();
+        $("[data-test-id=agreement]").click();
+        $("[class='button__content']").click();
+        $(".input_invalid .input__sub").shouldHave(text("Доставка в выбранный город недоступна"));
     }
 
     @Test
     @DisplayName(value = "Wrong name selection test")
-    void WrongNameSelectionTest() {
+    void wrongNameSelectionTest() {
         open("http://localhost:9999");
-        form.$("[placeholder='Город']").setValue("Псков");
-        form.$("[placeholder='Дата встречи']").sendKeys(Keys.chord(Keys.CONTROL, "a", Keys.DELETE));
-        form.$("[placeholder='Дата встречи']")
-                .setValue(localDate.plusDays(3).format(DateTimeFormatter.ofPattern("dd.MM.YYYY")));
-        form.$("[name='name']").setValue("Ivanov Ivan");
-        form.$("[name='phone']").setValue("+79012345678");
-        form.$("[data-test-id=agreement]").click();
-        form.$("[class='button__content']").click();
-        form.$(withText("Имя и Фамилия указаные неверно. Допустимы только русские буквы, пробелы и дефисы."))
-                .shouldBe(Condition.visible);
+        $("[placeholder='Город']").setValue("Псков");
+        datePicker();
+        $("[name='name']").setValue("Ivanov Ivan");
+        defaultPhone();
+        $("[data-test-id=agreement]").click();
+        $("[class='button__content']").click();
+        $(".input_invalid .input__sub").shouldHave(text("Имя и Фамилия указаные неверно. Допустимы только " +
+                "русские буквы, пробелы и дефисы."));
     }
 
     @Test
     @DisplayName(value = "Wrong phone selection test")
-    void WrongPhoneSelectionTest() {
+    void wrongPhoneSelectionTest() {
         open("http://localhost:9999");
-        form.$("[placeholder='Город']").setValue("Псков");
-        form.$("[placeholder='Дата встречи']").sendKeys(Keys.chord(Keys.CONTROL, "a", Keys.DELETE));
-        form.$("[placeholder='Дата встречи']")
-                .setValue(localDate.plusDays(3).format(DateTimeFormatter.ofPattern("dd.MM.YYYY")));
-        form.$("[name='name']").setValue("Иванов Иван");
-        form.$("[name='phone']").setValue("+790123456");
-        form.$("[data-test-id=agreement]").click();
-        form.$("[class='button__content']").click();
-        form.$(withText("Телефон указан неверно. Должно быть 11 цифр, например, +79012345678."))
-                .shouldBe(Condition.visible);
+        $("[placeholder='Город']").setValue("Псков");
+        datePicker();
+        defaultName();
+        $("[name='phone']").setValue("+790123456");
+        $("[data-test-id=agreement]").click();
+        $("[class='button__content']").click();
+        $(".input_invalid .input__sub").shouldHave(text("Телефон указан неверно. Должно быть 11 цифр, " +
+                "например, +79012345678."));
     }
 
     @Test
     @DisplayName(value = "Check for empty field")
     void checkForEmptyField() {
         open("http://localhost:9999");
-        form.$("[placeholder='Дата встречи']").sendKeys(Keys.chord(Keys.CONTROL, "a", Keys.DELETE));
-        form.$("[placeholder='Дата встречи']")
-                .setValue(localDate.plusDays(3).format(DateTimeFormatter.ofPattern("dd.MM.YYYY")));
-        form.$("[name='name']").setValue("Иванов Иван");
-        form.$("[name='phone']").setValue("+79012345678");
-        form.$("[data-test-id=agreement]").click();
-        form.$("[class='button__content']").click();
-        form.$(withText("Поле обязательно для заполнения")).shouldBe(Condition.visible);
+        datePicker();
+        defaultName();
+        defaultPhone();
+        $("[data-test-id=agreement]").click();
+        $("[class='button__content']").click();
+        $(".input_invalid .input__sub").shouldHave(text("Поле обязательно для заполнения"));
     }
 
     @Test
     @DisplayName(value = "Verification not agreement")
     void verificationNotAgreement() {
         open("http://localhost:9999");
-        form.$("[placeholder='Город']").setValue("Псков");
-        form.$("[placeholder='Дата встречи']").sendKeys(Keys.chord(Keys.CONTROL, "a", Keys.DELETE));
-        form.$("[placeholder='Дата встречи']")
-                .setValue(localDate.plusDays(3).format(DateTimeFormatter.ofPattern("dd.MM.YYYY")));
-        form.$("[name='name']").setValue("Иванов Иван");
-        form.$("[name='phone']").setValue("+79012345678");
-        form.$("[class='button__content']").click();
-        form.$(withText("Я соглашаюсь с условиями обработки и использования моих персональных данных"))
-                .shouldBe(Condition.visible);
+        $("[placeholder='Город']").setValue("Псков");
+        datePicker();
+        defaultName();
+        defaultPhone();
+        $("[class='button__content']").click();
+        $("[class='checkbox__text']").shouldHave(text("Я соглашаюсь с условиями обработки и " +
+                "использования моих персональных данных"));
     }
 
     @Test
@@ -133,27 +139,27 @@ class CardDeliveryOrderTest {
         $("[placeholder='Дата встречи']").sendKeys(Keys.chord(Keys.CONTROL, "a", Keys.DELETE));
         $("[placeholder='Дата встречи']")
                 .setValue(localDate.plusDays(3).format(DateTimeFormatter.ofPattern("dd.MM.YYYY")));
-        $("[name='name']").setValue("Иванов Иван");
-        $("[name='phone']").setValue("+79012345678");
+        defaultName();
+        defaultPhone();
         $("[data-test-id=agreement]").click();
         $("[class='button__content']").click();
-        $(withText("Встреча успешно забронирована на")).waitUntil(Condition.visible, 25000);
+        $("[class='notification__content']").waitUntil(Condition.visible, 25000)
+                .shouldHave(text("Встреча успешно забронирована на "));
     }
 
-    @Test
-    @DisplayName(value = "On 7 days order")
-    void On7DaysOrder() {
-        open("http://localhost:9999");
-        $("[placeholder='Город']").setValue("Псков");
-        $("[data-test-id=date] input").sendKeys(Keys.chord(Keys.CONTROL, "a", Keys.DELETE));
-        $("[data-test-id=date] input").click();
-        $$("[class=calendar-input__calendar-wrapper]").find(Condition.attribute(String.valueOf(localDate.plusDays(7)))).click();
-        //выбор даты в календаре не работает
-        $("[name='name']").setValue("Иванов Иван");
-        $("[name='phone']").setValue("+79012345678");
-        $("[data-test-id=agreement]").click();
-        $("[class='button__content']").click();
-        $(withText("Встреча успешно забронирована на")).waitUntil(Condition.visible, 25000);
-
-    }
+//    @Test
+//    @DisplayName(value = "On 7 days order")
+//    void on7DaysOrder() {
+//        open("http://localhost:9999");
+//        $("[placeholder='Город']").setValue("Псков");
+//        $("[data-test-id=date] input").sendKeys(Keys.chord(Keys.CONTROL, "a", Keys.DELETE));
+//        $("[data-test-id=date] input").click();
+//        $$("[class=calendar-input__calendar-wrapper]").find(Condition.attribute(String.valueOf(localDate.plusDays(7)))).click();
+//        //выбор даты в календаре не работает
+//        defaultName();
+//        defaultPhone();
+//        $("[data-test-id=agreement]").click();
+//        $("[class='button__content']").click();
+//        $(withText("Встреча успешно забронирована на")).waitUntil(Condition.visible, 25000).shouldBe(Condition.attribute("успешно"));
+//    }
 }
