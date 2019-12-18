@@ -11,7 +11,6 @@ import java.util.Date;
 
 import static com.codeborne.selenide.Condition.exactText;
 import static com.codeborne.selenide.Condition.text;
-import static com.codeborne.selenide.Selectors.withText;
 import static com.codeborne.selenide.Selenide.*;
 
 
@@ -147,19 +146,22 @@ class CardDeliveryOrderTest {
                 .shouldHave(text("Встреча успешно забронирована на "));
     }
 
-//    @Test
-//    @DisplayName(value = "On 7 days order")
-//    void on7DaysOrder() {
-//        open("http://localhost:9999");
-//        $("[placeholder='Город']").setValue("Псков");
-//        $("[data-test-id=date] input").sendKeys(Keys.chord(Keys.CONTROL, "a", Keys.DELETE));
-//        $("[data-test-id=date] input").click();
-//        $$("[class=calendar-input__calendar-wrapper]").find(Condition.attribute(String.valueOf(localDate.plusDays(7)))).click();
-//        //выбор даты в календаре не работает
-//        defaultName();
-//        defaultPhone();
-//        $("[data-test-id=agreement]").click();
-//        $("[class='button__content']").click();
-//        $(withText("Встреча успешно забронирована на")).waitUntil(Condition.visible, 25000).shouldBe(Condition.attribute("успешно"));
-//    }
+    @Test
+    @DisplayName(value = "On 7 days order")
+    void on7DaysOrder() {
+        LocalDate dateToBe = localDate.plusDays(7);
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+        String dateToUse = dateToBe.format(formatter);
+        open("http://localhost:9999");
+        $("[placeholder='Город']").setValue("Псков");
+        $("[data-test-id=date] input").sendKeys(Keys.chord(Keys.CONTROL, "a", Keys.DELETE));
+        $("[data-test-id=date] input").click();
+        $("[data-test-id=date] input").setValue(dateToUse);
+        defaultName();
+        defaultPhone();
+        $("[data-test-id=agreement]").click();
+        $("[class='button__content']").click();
+        $("[class='notification__content']").waitUntil(Condition.visible, 25000)
+                .shouldHave(text("Встреча успешно забронирована на "));
+    }
 }
